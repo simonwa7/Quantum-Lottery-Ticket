@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="599.3639453125" height="100.0">
+    <line x1="30.0" x2="569.3639453125" y1="25.0" y2="25.0" stroke="#1967d2" stroke-width="1" />
+    <line x1="30.0" x2="569.3639453125" y1="75.0" y2="75.0" stroke="#1967d2" stroke-width="1" />
+    <line x1="160.4006640625" x2="160.4006640625" y1="25.0" y2="75.0" stroke="black" stroke-width="3" />
+    <line x1="370.98923828125" x2="370.98923828125" y1="25.0" y2="75.0" stroke="black" stroke-width="3" />
+    <rect x="10.0" y="5.0" width="40" height="40" stroke="black" fill="white" stroke-width="0" />
+    <text x="30.0" y="25.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">0: </text>
+    <rect x="10.0" y="55.0" width="40" height="40" stroke="black" fill="white" stroke-width="0" />
+    <text x="30.0" y="75.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">1: </text>
+    <rect x="70.0" y="5.0" width="50.4006640625" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="95.20033203125" y="25.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">Ry(θ0)</text>
+    <rect x="70.0" y="55.0" width="50.4006640625" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="95.20033203125" y="75.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">Ry(θ1)</text>
+    <circle cx="160.4006640625" cy="25.0" r="10.0" />
+    <rect x="140.4006640625" y="55.0" width="40" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="160.4006640625" y="75.0" dominant-baseline="middle" text-anchor="middle" font-size="18px" font-family="Arial">X</text>
+    <rect x="200.40066406249997" y="5.0" width="50.4006640625" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="225.60099609374998" y="25.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">Ry(θ2)</text>
+    <rect x="200.40066406249997" y="55.0" width="50.4006640625" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="225.60099609374998" y="75.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">Ry(θ3)</text>
+    <rect x="270.801328125" y="5.0" width="50.4006640625" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="296.00166015625" y="25.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">Rz(θ4)</text>
+    <rect x="270.801328125" y="55.0" width="50.4006640625" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="296.00166015625" y="75.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">Rz(θ5)</text>
+    <rect x="341.20199218749997" y="5.0" width="59.5744921875" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="370.98923828125" y="25.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">XX</text>
+    <rect x="341.20199218749997" y="55.0" width="59.5744921875" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="370.98923828125" y="75.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">XX^(θ6)</text>
+    <rect x="420.776484375" y="5.0" width="50.4006640625" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="445.97681640625" y="25.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">Ry(θ7)</text>
+    <rect x="420.776484375" y="55.0" width="50.4006640625" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="445.97681640625" y="75.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">Ry(θ8)</text>
+    <rect x="491.1771484375" y="5.0" width="58.186796875" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="520.270546875" y="25.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">Rz(θ9)</text>
+    <rect x="491.1771484375" y="55.0" width="58.186796875" height="40" stroke="black" fill="white" stroke-width="1" />
+    <text x="520.270546875" y="75.0" dominant-baseline="middle" text-anchor="middle" font-size="14px" font-family="Arial">Rz(θ10)</text>
+</svg>

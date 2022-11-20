@@ -27,7 +27,7 @@ f.close()
 number_of_qubits = int(sys.argv[1])
 number_of_layers = int(sys.argv[2])
 
-print("------Running {} Qubits".format(number_of_qubits))
+##### GENERATE HAMILTONIAN #####
 qubit_data = DATA.get(str(number_of_qubits), {})
 DATA[str(number_of_qubits)] = qubit_data
 
@@ -41,9 +41,8 @@ elif (CIRCUIT_TYPE == "j1j2") or (CIRCUIT_TYPE == "j1j2_alternating-ansatz"):
 ground_state_energy = eigenspectrum(hamiltonian)[0]
 DATA[str(number_of_qubits)]["ground_state_energy"] = ground_state_energy
 
-print("-----------Working on {} Layers".format(number_of_layers))
-energies = DATA[str(number_of_qubits)].get(str(number_of_layers), [])
 
+##### GENERATE PARAMETERIZED QUANTUM CIRCUIT #####
 if CIRCUIT_TYPE == "tfim":
     number_of_parameters = 2 * number_of_layers
     parameters = [
@@ -71,9 +70,17 @@ elif CIRCUIT_TYPE == "j1j2_alternating-ansatz":
         number_of_qubits, number_of_layers, parameters
     )
 assert number_of_parameters == len(parameterized_quantum_circuit.free_symbols)
+
+
+energies = DATA[str(number_of_qubits)].get(str(number_of_layers), [])
+print("------Running {} Qubits".format(number_of_qubits))
+print("-----------Working on {} Layers".format(number_of_layers))
 print(
     "---------------Need to run {} more trials".format(len(TRIAL_RANGE) - len(energies))
 )
+
+
+##### RUN TRIALS #####
 for trial in TRIAL_RANGE:
     if trial >= len(energies):
         seed = (number_of_qubits * 123) + (number_of_layers * 97) + trial

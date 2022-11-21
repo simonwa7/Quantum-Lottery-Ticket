@@ -5,7 +5,10 @@ from vqe.circuits import (
     generate_overparameterized_vqe_j1j2_circuit,
 )
 from vqe.hamiltonians import generate_tfim_hamiltonian, generate_j1j2_hamiltonian
-from optimize import optimize_cost_function_with_lbfgsb
+from optimize import (
+    optimize_cost_function_with_lbfgsb,
+    optimize_cost_function_with_cmaes,
+)
 from openfermion.linalg import eigenspectrum
 import sympy
 import numpy as np
@@ -18,6 +21,7 @@ BOUNDARY_CONDITIONS = "open"
 CIRCUIT_TYPE = "j1j2_alternating-ansatz"
 PARAMETER_PERIOD = 2 * np.pi
 J2 = 1.25
+OPTIMIZER = "CMA-ES"
 
 datafilename = "data/overparameterization_{}_data.json".format(CIRCUIT_TYPE)
 with open(datafilename, "r") as f:
@@ -95,12 +99,27 @@ for trial in TRIAL_RANGE:
             -1 * PARAMETER_PERIOD, PARAMETER_PERIOD, number_of_parameters
         )
 
-        results = optimize_cost_function_with_lbfgsb(
-            initial_parameters,
-            vqe_cost_function,
-            use_wandb=False,
-            optimizer_options={"ftol": 1e-10},
-        )
+        if OPTIMIZER == "L-BFGS-B":
+            results = optimize_cost_function_with_lbfgsb(
+                initial_parameters,
+                vqe_cost_function,
+                use_wandb=False,
+                optimizer_options={"ftol": 1e-10},
+            )
+        elif OPTIMIZER == "CMA-ES":
+            results = optimize_cost_function_with_cmaes(
+                initial_parameters,
+                vqe_cost_function,
+                extra_config={},
+                use_wandb=False,
+                optimizer_options={
+                    "sigma_0": 0.01,
+                    "bounds": None,
+                    "tolx": 1e-6,
+                    "popsize": 36,
+                    "maxfevals": 20000,
+                },
+            )
 
         energies.append(results.opt_value)
 

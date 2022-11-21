@@ -25,6 +25,15 @@ if USE_WANDB:
     wandb.login()
 number_of_qubits = int(sys.argv[1])
 number_of_layers = int(sys.argv[2])
+optimizer = str(sys.argv[3])
+lbfgsb_options = {"ftol": 1e-10}
+cma_es_options = {
+    "sigma_0": 0.01,
+    "bounds": None,
+    "tolx": 1e-10,
+    "popsize": 36,
+    "maxfevals": 20000,
+}
 
 hamiltonian = generate_j1j2_hamiltonian(number_of_qubits, J2, j1=1)
 for trial in TRIAL_RANGE:
@@ -53,28 +62,39 @@ for trial in TRIAL_RANGE:
         use_wandb=USE_WANDB,
     )
 
-    unpruned_results = optimize_cost_function_with_lbfgsb(
-        initial_parameters,
-        unpruned_cost_function,
-        extra_config={
-            "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
-            "prunning_cutoff": PRUNING_CUTOFF,
-            "boundary_conditions": BOUNDARY_CONDITIONS,
-            "weight decay": WEIGHT_DECAY,
-            "parameter_period": PARAMETER_PERIOD,
-            "J2": J2,
-            "number_of_qubits": number_of_qubits,
-            "number_of_layers": number_of_layers,
-            "trial": trial,
-            "unpruned_initial_parameters": initial_parameters,
-            "pruned_parameter_indices": [],
-            "number_of_pruned_parameters": 0,
-            "pruning": "unpruned",
-        },
-        project=PROJECT,
-        use_wandb=USE_WANDB,
-        optimizer_options={"ftol": 1e-10},
-    )
+    extra_config = {
+        "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
+        "prunning_cutoff": PRUNING_CUTOFF,
+        "boundary_conditions": BOUNDARY_CONDITIONS,
+        "weight decay": WEIGHT_DECAY,
+        "parameter_period": PARAMETER_PERIOD,
+        "J2": J2,
+        "number_of_qubits": number_of_qubits,
+        "number_of_layers": number_of_layers,
+        "trial": trial,
+        "unpruned_initial_parameters": initial_parameters,
+        "pruned_parameter_indices": [],
+        "number_of_pruned_parameters": 0,
+        "pruning": "unpruned",
+    }
+    if optimizer == "L-BFGS-B":
+        unpruned_results = optimize_cost_function_with_lbfgsb(
+            initial_parameters,
+            unpruned_cost_function,
+            extra_config=extra_config,
+            project=PROJECT,
+            use_wandb=USE_WANDB,
+            optimizer_options=lbfgsb_options,
+        )
+    elif optimizer == "CMA-ES":
+        unpruned_results = optimize_cost_function_with_cmaes(
+            initial_parameters,
+            unpruned_cost_function,
+            extra_config=extra_config,
+            project=PROJECT,
+            use_wandb=USE_WANDB,
+            optimizer_options=cma_es_options,
+        )
 
     pruned_parameter_indices = get_parameter_indices_to_be_pruned(
         unpruned_results.opt_params, PRUNING_CUTOFF, PARAMETER_PERIOD
@@ -94,28 +114,39 @@ for trial in TRIAL_RANGE:
         use_wandb=USE_WANDB,
     )
 
-    pruned_results = optimize_cost_function_with_lbfgsb(
-        pruned_initial_parameters,
-        pruned_cost_function,
-        extra_config={
-            "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
-            "prunning_cutoff": PRUNING_CUTOFF,
-            "boundary_conditions": BOUNDARY_CONDITIONS,
-            "weight decay": WEIGHT_DECAY,
-            "parameter_period": PARAMETER_PERIOD,
-            "J2": J2,
-            "number_of_qubits": number_of_qubits,
-            "number_of_layers": number_of_layers,
-            "trial": trial,
-            "unpruned_initial_parameters": initial_parameters,
-            "pruned_parameter_indices": pruned_parameter_indices,
-            "number_of_pruned_parameters": len(pruned_parameter_indices),
-            "pruning": "pruned",
-        },
-        project=PROJECT,
-        use_wandb=USE_WANDB,
-        optimizer_options={"ftol": 1e-10},
-    )
+    extra_config = {
+        "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
+        "prunning_cutoff": PRUNING_CUTOFF,
+        "boundary_conditions": BOUNDARY_CONDITIONS,
+        "weight decay": WEIGHT_DECAY,
+        "parameter_period": PARAMETER_PERIOD,
+        "J2": J2,
+        "number_of_qubits": number_of_qubits,
+        "number_of_layers": number_of_layers,
+        "trial": trial,
+        "unpruned_initial_parameters": initial_parameters,
+        "pruned_parameter_indices": pruned_parameter_indices,
+        "number_of_pruned_parameters": len(pruned_parameter_indices),
+        "pruning": "pruned",
+    }
+    if optimizer == "L-BFGS-B":
+        pruned_results = optimize_cost_function_with_lbfgsb(
+            pruned_initial_parameters,
+            pruned_cost_function,
+            extra_config=extra_config,
+            project=PROJECT,
+            use_wandb=USE_WANDB,
+            optimizer_options=lbfgsb_options,
+        )
+    elif optimizer == "CMA-ES":
+        pruned_results = optimize_cost_function_with_cmaes(
+            pruned_initial_parameters,
+            pruned_cost_function,
+            extra_config=extra_config,
+            project=PROJECT,
+            use_wandb=USE_WANDB,
+            optimizer_options=cma_es_options,
+        )
 
     pruned_cost_function = get_vqe_cost_function(
         hamiltonian,
@@ -129,25 +160,37 @@ for trial in TRIAL_RANGE:
     random_initial_parameters = np.random.uniform(
         0, PARAMETER_PERIOD, len(pruned_initial_parameters)
     )
-    pruned_and_randomized_results = optimize_cost_function_with_lbfgsb(
-        random_initial_parameters,
-        pruned_cost_function,
-        extra_config={
-            "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
-            "prunning_cutoff": PRUNING_CUTOFF,
-            "boundary_conditions": BOUNDARY_CONDITIONS,
-            "weight decay": WEIGHT_DECAY,
-            "parameter_period": PARAMETER_PERIOD,
-            "J2": J2,
-            "number_of_qubits": number_of_qubits,
-            "number_of_layers": number_of_layers,
-            "trial": trial,
-            "unpruned_initial_parameters": initial_parameters,
-            "pruned_parameter_indices": pruned_parameter_indices,
-            "number_of_pruned_parameters": len(pruned_parameter_indices),
-            "pruning": "pruned_and_randomized",
-        },
-        project=PROJECT,
-        use_wandb=USE_WANDB,
-        optimizer_options={"ftol": 1e-10},
-    )
+
+    extra_config = {
+        "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
+        "prunning_cutoff": PRUNING_CUTOFF,
+        "boundary_conditions": BOUNDARY_CONDITIONS,
+        "weight decay": WEIGHT_DECAY,
+        "parameter_period": PARAMETER_PERIOD,
+        "J2": J2,
+        "number_of_qubits": number_of_qubits,
+        "number_of_layers": number_of_layers,
+        "trial": trial,
+        "unpruned_initial_parameters": initial_parameters,
+        "pruned_parameter_indices": pruned_parameter_indices,
+        "number_of_pruned_parameters": len(pruned_parameter_indices),
+        "pruning": "pruned_and_randomized",
+    }
+    if optimizer == "L-BFGS-B":
+        pruned_and_randomized_results = optimize_cost_function_with_lbfgsb(
+            random_initial_parameters,
+            pruned_cost_function,
+            extra_config=extra_config,
+            project=PROJECT,
+            use_wandb=USE_WANDB,
+            optimizer_options=lbfgsb_options,
+        )
+    elif optimizer == "CMA-ES":
+        pruned_and_randomized_results = optimize_cost_function_with_cmaes(
+            random_initial_parameters,
+            pruned_cost_function,
+            extra_config=extra_config,
+            project=PROJECT,
+            use_wandb=USE_WANDB,
+            optimizer_options=cma_es_options,
+        )

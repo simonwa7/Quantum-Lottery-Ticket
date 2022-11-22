@@ -132,3 +132,4 @@ dmypy.json
 .archived/
 wandb/
 .DS_Store
+outcmaes/

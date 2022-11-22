@@ -11,6 +11,7 @@ def get_vqe_cost_function(
     parameterized_quantum_circuit,
     pruned_indices=[],
     weight_decay=0,
+    offset=0,
     parameter_period=2 * np.pi,
     seed=123,
     use_wandb=False,
@@ -55,6 +56,11 @@ def get_vqe_cost_function(
                 "Parameter Weight Bias": bias,
                 "Cost": cost,
                 "Minimum Cost": min_cost,
+                "Offset Energy": energy + offset,
+                "Offset Minimum Energy": min_energy + offset,
+                "Offset Parameter Weight Bias": bias + offset,
+                "Offset Cost": cost + offset,
+                "Offset Minimum Cost": min_cost + offset,
             }
             wandb.log(log_dict)
 

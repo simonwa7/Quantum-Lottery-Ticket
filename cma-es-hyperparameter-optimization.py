@@ -4,6 +4,7 @@ from optimize import (
 from vqe.cost_function import get_vqe_cost_function
 from vqe.hamiltonians import generate_j1j2_hamiltonian
 from vqe.circuits import generate_overparameterized_vqe_j1j2_circuit
+from openfermion.linalg import eigenspectrum
 import wandb
 import numpy as np
 import sympy
@@ -28,6 +29,8 @@ number_of_layers = int(sys.argv[2])
 popsize = int(sys.argv[3])
 
 hamiltonian = generate_j1j2_hamiltonian(number_of_qubits, J2, j1=1)
+ground_state_energy = eigenspectrum(hamiltonian)[0]
+
 cma_es_options = {
     "sigma_0": 0.01,
     "bounds": None,
@@ -52,6 +55,7 @@ unpruned_cost_function = get_vqe_cost_function(
     parameterized_quantum_circuit,
     pruned_indices=[],
     weight_decay=WEIGHT_DECAY,
+    offset=-1 * ground_state_energy,
     parameter_period=PARAMETER_PERIOD,
     seed=SEED,
     use_wandb=USE_WANDB,

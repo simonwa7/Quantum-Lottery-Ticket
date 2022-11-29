@@ -7,5 +7,5 @@
 #SBATCH --mem=10000
 module load anaconda/3
 source activate /cluster/tufts/lovelab/wsimon02/condaenv/qlt
-python3 ../run_larocca_overparameterization_input.py 5 20
-python3 ../run_larocca_overparameterization_input.py 5 100
+python3 run_larocca_overparameterization_input.py 5 20
+python3 run_larocca_overparameterization_input.py 5 100

@@ -10,8 +10,8 @@ plt.rc("xtick", labelsize=10)  # fontsize of the x tick labels
 plt.rc("ytick", labelsize=10)  # fontsize of the y tick labels
 plt.rc("legend", fontsize=10)  # fontsize of the legend
 
-CIRCUIT_TYPE = "j1j2"
-with open("data/overparameterization_{}_data.json".format(CIRCUIT_TYPE), "r") as f:
+CIRCUIT_TYPE = "j1j2-J2=1.25"
+with open("data/overparameterization_{}.json".format(CIRCUIT_TYPE), "r") as f:
     data = json.loads(f.read())
 
 qubit_counts = [int(key) for key in data.keys()]
@@ -64,6 +64,6 @@ ax.legend()
 
 # plt.show()
 plt.savefig(
-    "figures/overparameterization_{}_overparameterization.pdf".format(CIRCUIT_TYPE),
+    "figures/overparameterization_{}.pdf".format(CIRCUIT_TYPE),
     dpi=300,
 )

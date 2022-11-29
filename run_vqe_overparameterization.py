@@ -21,12 +21,18 @@ BOUNDARY_CONDITIONS = "open"
 CIRCUIT_TYPE = "j1j2_alternating-ansatz"
 PARAMETER_PERIOD = 2 * np.pi
 J2 = 1.25
-OPTIMIZER = "CMA-ES"
+OPTIMIZER = "L-BFGS-B"
 
-datafilename = "data/overparameterization_{}_data.json".format(CIRCUIT_TYPE)
-with open(datafilename, "r") as f:
-    DATA = json.loads(f.read())
-f.close()
+datafilename = "data/overparameterization_{}-J2={}.json".format(CIRCUIT_TYPE, J2)
+try:
+    with open(datafilename, "r") as f:
+        DATA = json.loads(f.read())
+    f.close()
+except:
+    DATA = {}
+    with open(datafilename, "w") as f:
+        f.write(json.dumps(DATA))
+    f.close()
 
 number_of_qubits = int(sys.argv[1])
 number_of_layers = int(sys.argv[2])
@@ -113,9 +119,9 @@ for trial in TRIAL_RANGE:
                 extra_config={},
                 use_wandb=False,
                 optimizer_options={
-                    "sigma_0": 0.01,
+                    "sigma_0": PARAMETER_PERIOD / 100,
                     "bounds": None,
-                    "tolx": 1e-6,
+                    "tolx": 1e-10,
                     "popsize": 36,
                     "maxfevals": 20000,
                 },

@@ -14,7 +14,7 @@ import sys
 import json
 import copy
 
-VERSION = "0.1"
+VERSION = "0.2"
 PROJECT = "QLT-VQE-J1J2-v" + VERSION
 PRUNING_CUTOFF = 1e-2
 PARAMETER_PERIOD = 2 * np.pi

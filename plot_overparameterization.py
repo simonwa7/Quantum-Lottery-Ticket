@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import json
 
-ENERGY_DIFFERENCE_CUTOFF = 1e-9
+ENERGY_DIFFERENCE_CUTOFF = 1e-7
 
 plt.rc("font", size=10)  # controls default text size
 plt.rc("axes", titlesize=10)  # fontsize of the title
@@ -10,8 +10,10 @@ plt.rc("xtick", labelsize=10)  # fontsize of the x tick labels
 plt.rc("ytick", labelsize=10)  # fontsize of the y tick labels
 plt.rc("legend", fontsize=10)  # fontsize of the legend
 
-CIRCUIT_TYPE = "j1j2-J2=1.25"
-with open("data/overparameterization_{}.json".format(CIRCUIT_TYPE), "r") as f:
+CIRCUIT_TYPE = "j1j2_alternating-ansatz-J2=1.25"
+with open(
+    "data/overparameterization/overparameterization_{}.json".format(CIRCUIT_TYPE), "r"
+) as f:
     data = json.loads(f.read())
 
 qubit_counts = [int(key) for key in data.keys()]

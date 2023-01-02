@@ -17,7 +17,7 @@ import sys
 import json
 import copy
 
-VERSION = "0.2"
+VERSION = "0.3"
 PROJECT = "QLT-VQE-J1J2-v" + VERSION
 PRUNING_CUTOFF = 1e-2
 PARAMETER_PERIOD = 2 * np.pi
@@ -76,7 +76,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
         parameterized_quantum_circuit = generate_overparameterized_vqe_j1j2_circuit(
             number_of_qubits, number_of_layers, parameters
         )
-    elif CIRCUIT_TYPE == "j1j2_alternating-ansatz":
+    elif CIRCUIT_TYPE == "alternating_ansatz":
         number_of_parameters = (
             (3 * (number_of_qubits - 1)) + number_of_qubits
         ) * number_of_layers
@@ -87,7 +87,9 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             number_of_qubits, number_of_layers, parameters
         )
 
-    initial_parameters = np.random.uniform(0, PARAMETER_PERIOD, number_of_parameters)
+    initial_parameters = np.random.uniform(
+        -1 * PARAMETER_PERIOD, PARAMETER_PERIOD, number_of_parameters
+    )
 
     #### Unpruned Optimization
     if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(

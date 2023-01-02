@@ -5,7 +5,10 @@ from optimize import (
 )
 from vqe.cost_function import get_vqe_cost_function
 from vqe.hamiltonians import generate_j1j2_hamiltonian
-from vqe.circuits import generate_overparameterized_vqe_j1j2_circuit
+from vqe.circuits import (
+    generate_overparameterized_vqe_j1j2_circuit,
+    generate_alternating_vqe_j1j2_circuit,
+)
 from openfermion.linalg import eigenspectrum
 import wandb
 import numpy as np
@@ -26,6 +29,7 @@ PARAMETER_PERIOD = 2 * np.pi
 J2 = 1.25
 if USE_WANDB:
     wandb.login()
+CIRCUIT_TYPE = "alternating_ansatz"
 number_of_qubits = int(sys.argv[1])
 number_of_layers = int(sys.argv[2])
 optimizer = str(sys.argv[3])
@@ -38,10 +42,16 @@ cma_es_options = {
     "maxfevals": 20000,
 }
 
-datafilename = "data/qlt/j1j2_{}.json".format(optimizer)
-with open(datafilename, "r") as f:
-    DATA = json.loads(f.read())
-f.close()
+datafilename = "data/qlt/{}/j1j2_{}.json".format(CIRCUIT_TYPE, optimizer)
+try:
+    with open(datafilename, "r") as f:
+        DATA = json.loads(f.read())
+    f.close()
+except:
+    DATA = {}
+    with open(datafilename, "w") as f:
+        f.write(json.dumps(DATA))
+    f.close()
 if not DATA.get(str(number_of_qubits), False):
     DATA[str(number_of_qubits)] = {}
 if not DATA[str(number_of_qubits)].get(str(number_of_layers), False):
@@ -56,15 +66,27 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
     SEED = 1234 + (number_of_layers * 17) + (trial * 23)
     np.random.seed(SEED)
 
-    number_of_parameters = (
-        (3 * (2 * number_of_qubits - 3)) + number_of_qubits
-    ) * number_of_layers
-    parameters = [
-        sympy.Symbol("theta{}".format(i)) for i in range(number_of_parameters)
-    ]
-    parameterized_quantum_circuit = generate_overparameterized_vqe_j1j2_circuit(
-        number_of_qubits, number_of_layers, parameters
-    )
+    if CIRCUIT_TYPE == "full_ansatz":
+        number_of_parameters = (
+            (3 * (2 * number_of_qubits - 3)) + number_of_qubits
+        ) * number_of_layers
+        parameters = [
+            sympy.Symbol("theta{}".format(i)) for i in range(number_of_parameters)
+        ]
+        parameterized_quantum_circuit = generate_overparameterized_vqe_j1j2_circuit(
+            number_of_qubits, number_of_layers, parameters
+        )
+    elif CIRCUIT_TYPE == "j1j2_alternating-ansatz":
+        number_of_parameters = (
+            (3 * (number_of_qubits - 1)) + number_of_qubits
+        ) * number_of_layers
+        parameters = [
+            sympy.Symbol("theta{}".format(i)) for i in range(number_of_parameters)
+        ]
+        parameterized_quantum_circuit = generate_alternating_vqe_j1j2_circuit(
+            number_of_qubits, number_of_layers, parameters
+        )
+
     initial_parameters = np.random.uniform(0, PARAMETER_PERIOD, number_of_parameters)
 
     #### Unpruned Optimization

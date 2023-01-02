@@ -1,4 +1,7 @@
-from prune import get_parameter_indices_to_be_pruned, get_pruned_parameters
+from prune import (
+    get_parameter_indices_to_be_pruned_using_percentage,
+    get_pruned_parameters,
+)
 from optimize import (
     optimize_cost_function_with_cmaes,
     optimize_cost_function_with_lbfgsb,
@@ -17,11 +20,11 @@ import sys
 import json
 import copy
 
-VERSION = "0.3"
+VERSION = "0.4"
 PROJECT = "QLT-VQE-J1J2-v" + VERSION
-PRUNING_CUTOFF = 1e-2
+PRUNING_PERCENTAGE = 0.5
 PARAMETER_PERIOD = 2 * np.pi
-WEIGHT_DECAY = 50
+WEIGHT_DECAY = 0
 USE_WANDB = True
 MAX_NUMBER_OF_TRIALS = 30
 BOUNDARY_CONDITIONS = "open"
@@ -42,7 +45,7 @@ cma_es_options = {
     "maxfevals": 20000,
 }
 
-datafilename = "data/qlt/{}/j1j2_{}.json".format(CIRCUIT_TYPE, optimizer)
+datafilename = "data/qlt/{}/j1j2_{}_percentage.json".format(CIRCUIT_TYPE, optimizer)
 try:
     with open(datafilename, "r") as f:
         DATA = json.loads(f.read())
@@ -108,7 +111,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
 
         extra_config = {
             "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
-            "prunning_cutoff": PRUNING_CUTOFF,
+            "pruning_percentage": PRUNING_PERCENTAGE,
             "boundary_conditions": BOUNDARY_CONDITIONS,
             "weight decay": WEIGHT_DECAY,
             "parameter_period": PARAMETER_PERIOD,
@@ -149,31 +152,23 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             f.write(json.dumps(DATA))
         f.close()
 
+    unpruned_optimal_parameters = np.asarray(
+        DATA[str(number_of_qubits)][str(number_of_layers)][trial]["unpruned"][
+            "optimal_parameters"
+        ]
+    )
+    pruned_parameter_indices = get_parameter_indices_to_be_pruned_using_percentage(
+        unpruned_optimal_parameters,
+        PRUNING_PERCENTAGE,
+        PARAMETER_PERIOD,
+    )
+    pruned_initial_parameters = get_pruned_parameters(
+        initial_parameters, pruned_parameter_indices
+    )
+
     if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
         "pruned", False
     ):
-        assert np.array_equal(
-            initial_parameters,
-            np.asarray(
-                DATA[str(number_of_qubits)][str(number_of_layers)][trial]["unpruned"][
-                    "initial_parameters"
-                ]
-            ),
-        )
-        unpruned_optimal_parameters = np.asarray(
-            DATA[str(number_of_qubits)][str(number_of_layers)][trial]["unpruned"][
-                "optimal_parameters"
-            ]
-        )
-        pruned_parameter_indices = get_parameter_indices_to_be_pruned(
-            unpruned_optimal_parameters,
-            PRUNING_CUTOFF,
-            PARAMETER_PERIOD,
-        )
-
-        pruned_initial_parameters = get_pruned_parameters(
-            initial_parameters, pruned_parameter_indices
-        )
 
         pruned_cost_function = get_vqe_cost_function(
             hamiltonian,
@@ -188,7 +183,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
 
         extra_config = {
             "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
-            "prunning_cutoff": PRUNING_CUTOFF,
+            "pruning_percentage": PRUNING_PERCENTAGE,
             "boundary_conditions": BOUNDARY_CONDITIONS,
             "weight decay": WEIGHT_DECAY,
             "parameter_period": PARAMETER_PERIOD,
@@ -250,7 +245,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
 
         extra_config = {
             "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
-            "prunning_cutoff": PRUNING_CUTOFF,
+            "pruning_percentage": PRUNING_PERCENTAGE,
             "boundary_conditions": BOUNDARY_CONDITIONS,
             "weight decay": WEIGHT_DECAY,
             "parameter_period": PARAMETER_PERIOD,

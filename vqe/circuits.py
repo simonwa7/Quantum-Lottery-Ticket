@@ -7,7 +7,6 @@ def generate_alternating_vqe_j1j2_circuit(
     number_of_qubits, number_of_layers, parameters
 ):
     """Variational Hamiltonian Ansatz"""
-    # assert 2 * number_of_layers
     qubits = [cirq.LineQubit(i) for i in range(number_of_qubits)]
     circuit = cirq.Circuit()
 
@@ -26,34 +25,15 @@ def generate_alternating_vqe_j1j2_circuit(
                 parameters[parameter_counter + 1],
                 parameters[parameter_counter + 2],
             )
-        parameter_counter += 3
+            parameter_counter += 3
 
-        # Add next nearest-neighbor entanglers
-        for qubit_index in range(0, number_of_qubits - 2):
-            circuit = _add_xx_yy_zz_gate(
-                circuit,
-                qubits[qubit_index],
-                qubits[qubit_index + 2],
-                parameters[parameter_counter],
-                parameters[parameter_counter + 1],
-                parameters[parameter_counter + 2],
+        # Add single qubit rotation layer
+        for qubit_index in range(0, number_of_qubits):
+            circuit.append(
+                cirq.rx(parameters[parameter_counter]).on(qubits[qubit_index])
             )
-        parameter_counter += 3
+            parameter_counter += 1
 
-        # # Add single qubit rotation layer
-        # for qubit_index in range(0, number_of_qubits):
-        #     circuit.append(
-        #         cirq.rx(parameters[parameter_counter]).on(qubits[qubit_index])
-        #     )
-        #     parameter_counter += 1
-    # from cirq.contrib.svg import circuit_to_svg
-
-    # with open("circuit.svg", "w") as f:
-    #     f.write(circuit_to_svg(circuit))
-    # f.close()
-    # import pdb
-
-    # pdb.set_trace()
     return import_from_cirq(circuit)
 
 

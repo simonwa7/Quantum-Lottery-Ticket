@@ -23,7 +23,9 @@ PARAMETER_PERIOD = 2 * np.pi
 J2 = 1.25
 OPTIMIZER = "L-BFGS-B"
 
-datafilename = "data/overparameterization_{}-J2={}.json".format(CIRCUIT_TYPE, J2)
+datafilename = "data/overparameterization/overparameterization_{}-J2={}.json".format(
+    CIRCUIT_TYPE, J2
+)
 try:
     with open(datafilename, "r") as f:
         DATA = json.loads(f.read())
@@ -72,7 +74,9 @@ elif CIRCUIT_TYPE == "j1j2":
         number_of_qubits, number_of_layers, parameters
     )
 elif CIRCUIT_TYPE == "j1j2_alternating-ansatz":
-    number_of_parameters = ((2 * 3)) * number_of_layers
+    number_of_parameters = (
+        (3 * (number_of_qubits - 1)) + number_of_qubits
+    ) * number_of_layers
     parameters = [
         sympy.Symbol("theta{}".format(i)) for i in range(number_of_parameters)
     ]

@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH -J qlt-larocca-overparameterization
-#SBATCH -p batch
-#SBATCH --time=7-00:00:00
-#SBATCH -n 1
-#SBATCH -c 2
-#SBATCH --mem=10000
-module load anaconda/3
-source activate /cluster/tufts/lovelab/wsimon02/condaenv/qlt
-python3 run_larocca_overparameterization_input.py 5 20
-python3 run_larocca_overparameterization_input.py 5 100
+conda activate qlt
+python3 run_vqe_overparameterization.py 3 4
+python3 run_vqe_overparameterization.py 3 5
+python3 run_vqe_overparameterization.py 3 6
+python3 run_vqe_overparameterization.py 5 4
+python3 run_vqe_overparameterization.py 5 5
+python3 run_vqe_overparameterization.py 5 6
+python3 run_vqe_overparameterization.py 6 4
+python3 run_vqe_overparameterization.py 6 5
+python3 run_vqe_overparameterization.py 6 6

@@ -1,4 +1,4 @@
-from ..prune import get_padded_parameters
+from prune import get_padded_parameters
 from zquantum.qcbm.ansatz import QCBMAnsatz
 from zquantum.qcbm.cost_function import create_QCBM_cost_function
 from qeqiskit.simulator import QiskitSimulator

@@ -20,7 +20,7 @@ import sys
 import json
 import copy
 
-VERSION = "0.4"
+VERSION = "0.5"
 PROJECT = "QLT-VQE-J1J2-v" + VERSION
 PRUNING_PERCENTAGE = 0.5
 PARAMETER_PERIOD = 2 * np.pi
@@ -28,7 +28,6 @@ WEIGHT_DECAY = 0
 USE_WANDB = True
 MAX_NUMBER_OF_TRIALS = 30
 BOUNDARY_CONDITIONS = "open"
-PARAMETER_PERIOD = 2 * np.pi
 J2 = 1.25
 if USE_WANDB:
     wandb.login()
@@ -45,7 +44,9 @@ cma_es_options = {
     "maxfevals": 20000,
 }
 
-datafilename = "data/qlt/{}/j1j2_{}_percentage.json".format(CIRCUIT_TYPE, optimizer)
+datafilename = "data/qlt/J1J2-VQE/{}/{}/{}.json".format(
+    CIRCUIT_TYPE, optimizer, PROJECT
+)
 try:
     with open(datafilename, "r") as f:
         DATA = json.loads(f.read())
@@ -110,7 +111,9 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
         )
 
         extra_config = {
-            "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
+            "intialization_strategy": "uniform (-{}->{})".format(
+                PARAMETER_PERIOD, PARAMETER_PERIOD
+            ),
             "pruning_percentage": PRUNING_PERCENTAGE,
             "boundary_conditions": BOUNDARY_CONDITIONS,
             "weight decay": WEIGHT_DECAY,
@@ -182,7 +185,9 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
         )
 
         extra_config = {
-            "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
+            "intialization_strategy": "uniform (-{}->{})".format(
+                PARAMETER_PERIOD, PARAMETER_PERIOD
+            ),
             "pruning_percentage": PRUNING_PERCENTAGE,
             "boundary_conditions": BOUNDARY_CONDITIONS,
             "weight decay": WEIGHT_DECAY,
@@ -240,11 +245,13 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             use_wandb=USE_WANDB,
         )
         random_initial_parameters = np.random.uniform(
-            0, PARAMETER_PERIOD, len(pruned_initial_parameters)
+            -PARAMETER_PERIOD, PARAMETER_PERIOD, len(pruned_initial_parameters)
         )
 
         extra_config = {
-            "intialization_strategy": "uniform (0->{})".format(PARAMETER_PERIOD),
+            "intialization_strategy": "uniform (-{}->{})".format(
+                PARAMETER_PERIOD, PARAMETER_PERIOD
+            ),
             "pruning_percentage": PRUNING_PERCENTAGE,
             "boundary_conditions": BOUNDARY_CONDITIONS,
             "weight decay": WEIGHT_DECAY,

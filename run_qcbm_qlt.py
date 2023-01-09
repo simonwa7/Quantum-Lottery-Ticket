@@ -15,7 +15,7 @@ PROJECT = "QLT-QCBM-v" + VERSION
 PRUNING_PERCENTAGE = 0.5
 PARAMETER_PERIOD = 2 * np.pi
 USE_WANDB = True
-MAX_NUMBER_OF_TRIALS = 30
+MAX_NUMBER_OF_TRIALS = 50
 if USE_WANDB:
     wandb.login()
 number_of_qubits = int(sys.argv[1])

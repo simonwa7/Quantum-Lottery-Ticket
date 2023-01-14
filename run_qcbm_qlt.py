@@ -10,10 +10,11 @@ from zquantum.qcbm.ansatz import QCBMAnsatz
 import sys
 import json
 
-VERSION = "0.3"
+VERSION = "0.5"
 PROJECT = "QLT-QCBM-v" + VERSION
-PRUNING_PERCENTAGE = 0.5
+PRUNING_PERCENTAGE = 0.1
 PARAMETER_PERIOD = 2 * np.pi
+WEIGHT_DECAY = 0
 USE_WANDB = True
 MAX_NUMBER_OF_TRIALS = 50
 if USE_WANDB:
@@ -61,6 +62,8 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             number_of_layers,
             [],
             use_wandb=USE_WANDB,
+            weight_decay=WEIGHT_DECAY,
+            parameter_period=PARAMETER_PERIOD,
         )
 
         extra_config = {
@@ -68,6 +71,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
                 PARAMETER_PERIOD, PARAMETER_PERIOD
             ),
             "pruning_percentage": PRUNING_PERCENTAGE,
+            "weight_decay": WEIGHT_DECAY,
             "parameter_period": PARAMETER_PERIOD,
             "number_of_qubits": number_of_qubits,
             "number_of_layers": number_of_layers,
@@ -118,6 +122,8 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             number_of_layers,
             pruned_parameter_indices,
             use_wandb=USE_WANDB,
+            weight_decay=WEIGHT_DECAY,
+            parameter_period=PARAMETER_PERIOD,
         )
 
         extra_config = {
@@ -125,6 +131,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
                 PARAMETER_PERIOD, PARAMETER_PERIOD
             ),
             "pruning_percentage": PRUNING_PERCENTAGE,
+            "weight_decay": WEIGHT_DECAY,
             "parameter_period": PARAMETER_PERIOD,
             "number_of_qubits": number_of_qubits,
             "number_of_layers": number_of_layers,
@@ -162,6 +169,8 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             number_of_layers,
             pruned_parameter_indices,
             use_wandb=USE_WANDB,
+            weight_decay=WEIGHT_DECAY,
+            parameter_period=PARAMETER_PERIOD,
         )
         random_initial_parameters = np.random.uniform(
             -PARAMETER_PERIOD, PARAMETER_PERIOD, len(pruned_initial_parameters)
@@ -172,6 +181,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
                 PARAMETER_PERIOD, PARAMETER_PERIOD
             ),
             "pruning_percentage": PRUNING_PERCENTAGE,
+            "weight_decay": WEIGHT_DECAY,
             "parameter_period": PARAMETER_PERIOD,
             "number_of_qubits": number_of_qubits,
             "number_of_layers": number_of_layers,

@@ -41,7 +41,7 @@ if not DATA[str(number_of_qubits)].get(str(number_of_layers), False):
 for trial in range(MAX_NUMBER_OF_TRIALS):
     if len(DATA[str(number_of_qubits)][str(number_of_layers)]) == trial:
         DATA[str(number_of_qubits)][str(number_of_layers)].append({})
-    SEED = 1234 + (number_of_layers * 17) + (trial * 23)
+    SEED = 1234 + (number_of_layers * 17) + (trial * 23) + (abs(hash(PROJECT)) % 10000)
     np.random.seed(SEED)
 
     number_of_parameters = QCBMAnsatz(

@@ -12,7 +12,7 @@ import json
 
 VERSION = "0.5"
 PROJECT = "QLT-QCBM-v" + VERSION
-PRUNING_PERCENTAGE = 0.1
+PRUNING_PERCENTAGE = 0.2
 PARAMETER_PERIOD = 2 * np.pi
 WEIGHT_DECAY = 0
 USE_WANDB = True
@@ -70,7 +70,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             "intialization_strategy": "uniform (-{}->{})".format(
                 PARAMETER_PERIOD, PARAMETER_PERIOD
             ),
-            "pruning_percentage": PRUNING_PERCENTAGE,
+            "pruning_percentage": 0,
             "weight_decay": WEIGHT_DECAY,
             "parameter_period": PARAMETER_PERIOD,
             "number_of_qubits": number_of_qubits,
@@ -115,7 +115,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
     )
 
     if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
-        "pruned", False
+        "pruned:{}".format(PRUNING_PERCENTAGE), False
     ):
         pruned_cost_function = get_pruned_qcbm_cost_function(
             target_distribution,
@@ -162,7 +162,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
         f.close()
 
     if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
-        "pruned_and_randomized", False
+        "pruned_and_randomized:{}".format(PRUNING_PERCENTAGE), False
     ):
         pruned_cost_function = get_pruned_qcbm_cost_function(
             target_distribution,

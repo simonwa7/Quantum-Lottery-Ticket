@@ -14,14 +14,14 @@ VERSION = "0.1"
 PROJECT = "QLT-QCBM-find-pruning-percentage-v" + VERSION
 PARAMETER_PERIOD = 2 * np.pi
 USE_WANDB = True
-MAX_NUMBER_OF_TRIALS = 2
+MAX_NUMBER_OF_TRIALS = 10
 if USE_WANDB:
     wandb.login()
 number_of_qubits = int(sys.argv[1])
 number_of_layers = int(sys.argv[2])
 lbfgsb_options = {"ftol": 1e-10}
 
-datafilename = "data/qlt/QCBM/{}/{}-prunning_90_95.json".format("L-BFGS-B", PROJECT)
+datafilename = "data/qlt/QCBM/{}/{}.json".format("L-BFGS-B", PROJECT)
 try:
     with open(datafilename, "r") as f:
         DATA = json.loads(f.read())

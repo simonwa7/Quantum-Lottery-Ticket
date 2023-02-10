@@ -10,13 +10,16 @@ from zquantum.qcbm.ansatz import QCBMAnsatz
 import sys
 import json
 
-VERSION = "0.5"
+VERSION = "0.6"
 PROJECT = "QLT-QCBM-v" + VERSION
-PRUNING_PERCENTAGE = 0.2
+PRUNING_PERCENTAGE = 0.1
 PARAMETER_PERIOD = 2 * np.pi
 WEIGHT_DECAY = 0
 USE_WANDB = True
-MAX_NUMBER_OF_TRIALS = 50
+MAX_NUMBER_OF_TRIALS = 10
+DISTRIBUTION_TYPE = "normal"
+DISTRIBUTION_MEAN = 0.65
+DISTRIBUTION_STDEV = 0.1
 if USE_WANDB:
     wandb.login()
 number_of_qubits = int(sys.argv[1])
@@ -47,8 +50,11 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
     number_of_parameters = QCBMAnsatz(
         number_of_layers, number_of_qubits
     ).number_of_params
-    target_distribution = np.random.uniform(0, 1, 2 ** number_of_qubits)
-    target_distribution /= sum(target_distribution)
+    samples = np.random.normal(
+        loc=DISTRIBUTION_MEAN, scale=DISTRIBUTION_STDEV, size=100000000
+    )
+    target_distribution = np.histogram(samples, 2 ** number_of_qubits, (0, 1))[0]
+    target_distribution = target_distribution / sum(target_distribution)
     initial_parameters = np.random.uniform(
         -1 * PARAMETER_PERIOD, PARAMETER_PERIOD, number_of_parameters
     )

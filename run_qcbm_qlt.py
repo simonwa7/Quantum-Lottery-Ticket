@@ -10,11 +10,11 @@ from zquantum.qcbm.ansatz import QCBMAnsatz
 import sys
 import json
 
-VERSION = "0.6"
+VERSION = "0.7"
 PROJECT = "QLT-QCBM-v" + VERSION
 PRUNING_PERCENTAGE = 0.1
 PARAMETER_PERIOD = 2 * np.pi
-WEIGHT_DECAY = 0
+WEIGHT_DECAY = 1e-6
 USE_WANDB = True
 MAX_NUMBER_OF_TRIALS = 10
 DISTRIBUTION_TYPE = "normal"
@@ -87,6 +87,9 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             "pruned_parameter_indices": [],
             "number_of_pruned_parameters": 0,
             "type": "unpruned",
+            "target_distribution_type": DISTRIBUTION_TYPE,
+            "target_distribution_mean": DISTRIBUTION_MEAN,
+            "target_distribution_stddev": DISTRIBUTION_STDEV,
         }
         unpruned_results = optimize_cost_function_with_lbfgsb(
             initial_parameters,
@@ -147,6 +150,9 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             "pruned_parameter_indices": pruned_parameter_indices,
             "number_of_pruned_parameters": len(pruned_parameter_indices),
             "type": "pruned",
+            "target_distribution_type": DISTRIBUTION_TYPE,
+            "target_distribution_mean": DISTRIBUTION_MEAN,
+            "target_distribution_stddev": DISTRIBUTION_STDEV,
         }
         pruned_results = optimize_cost_function_with_lbfgsb(
             pruned_initial_parameters,
@@ -197,6 +203,9 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             "pruned_parameter_indices": pruned_parameter_indices,
             "number_of_pruned_parameters": len(pruned_parameter_indices),
             "type": "pruned_and_randomized",
+            "target_distribution_type": DISTRIBUTION_TYPE,
+            "target_distribution_mean": DISTRIBUTION_MEAN,
+            "target_distribution_stddev": DISTRIBUTION_STDEV,
         }
         pruned_and_randomized_results = optimize_cost_function_with_lbfgsb(
             random_initial_parameters,

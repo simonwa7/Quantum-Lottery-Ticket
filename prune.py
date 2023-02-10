@@ -63,16 +63,17 @@ def get_padded_parameters(unpadded_parameters, pruned_indices):
 
 def calculate_parameter_weight_bias(parameters, period, weight_decay):
     # Calculate the bias to drive parameters to zero-values based on weight decay
+    # Using 1-norm to evaluate parameteter distance
     max_parameter_distances = np.asarray([np.pi for _ in parameters])
     parameter_distances = np.asarray(
         [
             min(
-                parameter % (period),
+                np.abs(parameter % (period)),
                 np.abs((parameter % period) - period),
             )
             for parameter in parameters
         ]
     )
-    return weight_decay * (
-        sum(parameter_distances ** 2) / sum(max_parameter_distances ** 2)
-    )
+    for param in parameter_distances:
+        assert param >= 0.0
+    return weight_decay * (sum(parameter_distances) / sum(max_parameter_distances))

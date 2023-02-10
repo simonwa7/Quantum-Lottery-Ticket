@@ -66,7 +66,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             "intialization_strategy": "uniform (-{}->{})".format(
                 PARAMETER_PERIOD, PARAMETER_PERIOD
             ),
-            "pruning_percentage": PRUNING_PERCENTAGE,
+            "pruning_percentage": 0,
             "parameter_period": PARAMETER_PERIOD,
             "number_of_qubits": number_of_qubits,
             "number_of_layers": number_of_layers,
@@ -95,7 +95,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             f.write(json.dumps(DATA))
         f.close()
 
-    for PRUNING_PERCENTAGE in [0.9, 0.95]:
+    for PRUNING_PERCENTAGE in [0.05, 0.1, 0.15, 0.2, 0.4, 0.6, 0.8, 0.9, 0.95]:
         unpruned_optimal_parameters = np.asarray(
             DATA[str(number_of_qubits)][str(number_of_layers)][trial]["unpruned"][
                 "optimal_parameters"

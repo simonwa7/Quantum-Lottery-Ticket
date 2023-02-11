@@ -133,3 +133,7 @@ dmypy.json
 wandb/
 .DS_Store
 outcmaes/
+
+data/qlt/J1J2-VQE/QLT-VQE-J1J2-v0.4.csv
+data/qlt/J1J2-VQE/QLT-VQE-J1J2-v0.5.csv
+data/qlt/QCBM/QLT-QCBM-v0.5.csv

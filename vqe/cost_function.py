@@ -26,8 +26,10 @@ def get_vqe_cost_function(
     min_energy = np.inf
     min_cost = np.inf
 
-    def wrapped_cost_function(parameters):
+    def wrapped_cost_function(parameters, extra_wandb_logs=None):
         nonlocal min_energy, min_cost
+        if extra_wandb_logs is None:
+            extra_wandb_logs = {}
         parameters = get_padded_parameters(parameters, pruned_indices)
         energy = cost_function(parameters)
 
@@ -51,16 +53,19 @@ def get_vqe_cost_function(
             min_energy = min(min_energy, energy)
             min_cost = min(min_cost, cost)
             log_dict = {
-                "Energy": energy,
-                "Minimum Energy": min_energy,
-                "Parameter Weight Bias": bias,
-                "Cost": cost,
-                "Minimum Cost": min_cost,
-                "Offset Energy": energy + offset,
-                "Offset Minimum Energy": min_energy + offset,
-                "Offset Parameter Weight Bias": bias + offset,
-                "Offset Cost": cost + offset,
-                "Offset Minimum Cost": min_cost + offset,
+                **{
+                    "Energy": energy,
+                    "Minimum Energy": min_energy,
+                    "Parameter Weight Bias": bias,
+                    "Cost": cost,
+                    "Minimum Cost": min_cost,
+                    "Offset Energy": energy + offset,
+                    "Offset Minimum Energy": min_energy + offset,
+                    "Offset Parameter Weight Bias": bias + offset,
+                    "Offset Cost": cost + offset,
+                    "Offset Minimum Cost": min_cost + offset,
+                },
+                **extra_wandb_logs,
             }
             wandb.log(log_dict)
 

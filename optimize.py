@@ -24,7 +24,18 @@ def optimize_cost_function_with_lbfgsb(
 
         run = wandb.init(project=project, config=config)
 
-    results = optimizer.minimize(cost_function, initial_parameters, keep_history=True)
+    iteration_counter = 0
+
+    def wandb_callback(parameters):
+        nonlocal cost_function, iteration_counter
+        extra_wandb_logs = {"Iteration": iteration_counter}
+        iteration_counter += 1
+        cost = cost_function(parameters, extra_wandb_logs=extra_wandb_logs)
+        return cost
+
+    results = optimizer.minimize(
+        cost_function, initial_parameters, keep_history=True, callback=wandb_callback
+    )
 
     if use_wandb:
         run.finish()

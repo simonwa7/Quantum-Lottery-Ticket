@@ -20,13 +20,13 @@ import sys
 import json
 import copy
 
-VERSION = "0.5"
+VERSION = "0.7"
 PROJECT = "QLT-VQE-J1J2-v" + VERSION
 PRUNING_PERCENTAGE = 0.5
 PARAMETER_PERIOD = 2 * np.pi
 WEIGHT_DECAY = 0
 USE_WANDB = True
-MAX_NUMBER_OF_TRIALS = 50
+MAX_NUMBER_OF_TRIALS = 10
 BOUNDARY_CONDITIONS = "open"
 J2 = 1.25
 if USE_WANDB:
@@ -92,7 +92,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
         )
 
     initial_parameters = np.random.uniform(
-        -1 * PARAMETER_PERIOD, PARAMETER_PERIOD, number_of_parameters
+        -1 * (PARAMETER_PERIOD / 2), (PARAMETER_PERIOD / 2), number_of_parameters
     )
 
     #### Unpruned Optimization
@@ -112,7 +112,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
 
         extra_config = {
             "intialization_strategy": "uniform (-{}->{})".format(
-                PARAMETER_PERIOD, PARAMETER_PERIOD
+                PARAMETER_PERIOD / 2, PARAMETER_PERIOD / 2
             ),
             "pruning_percentage": PRUNING_PERCENTAGE,
             "boundary_conditions": BOUNDARY_CONDITIONS,
@@ -186,7 +186,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
 
         extra_config = {
             "intialization_strategy": "uniform (-{}->{})".format(
-                PARAMETER_PERIOD, PARAMETER_PERIOD
+                PARAMETER_PERIOD / 2, PARAMETER_PERIOD / 2
             ),
             "pruning_percentage": PRUNING_PERCENTAGE,
             "boundary_conditions": BOUNDARY_CONDITIONS,
@@ -245,12 +245,12 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             use_wandb=USE_WANDB,
         )
         random_initial_parameters = np.random.uniform(
-            -PARAMETER_PERIOD, PARAMETER_PERIOD, len(pruned_initial_parameters)
+            -PARAMETER_PERIOD / 2, PARAMETER_PERIOD / 2, len(pruned_initial_parameters)
         )
 
         extra_config = {
             "intialization_strategy": "uniform (-{}->{})".format(
-                PARAMETER_PERIOD, PARAMETER_PERIOD
+                PARAMETER_PERIOD / 2, PARAMETER_PERIOD / 2
             ),
             "pruning_percentage": PRUNING_PERCENTAGE,
             "boundary_conditions": BOUNDARY_CONDITIONS,

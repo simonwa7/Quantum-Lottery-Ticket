@@ -44,8 +44,13 @@ def get_pruned_qcbm_cost_function(
     min_cost = np.inf
     min_cnll = np.inf
 
-    def pruned_cost_function(parameters):
+    def pruned_cost_function(
+        parameters,
+        extra_wandb_logs=None,
+    ):
         nonlocal min_cost, min_cnll
+        if extra_wandb_logs is None:
+            extra_wandb_logs = {}
 
         parameters = get_padded_parameters(parameters, pruned_indices)
 
@@ -58,17 +63,21 @@ def get_pruned_qcbm_cost_function(
         min_cnll = min(min_cnll, cnll)
         if use_wandb:
             log_dict = {
-                "Minimum Offset Cost": min_cost - minimum_possible_cnll,
-                "Minimum Offset Clipped Negative Log Likelihood": min_cnll
-                - minimum_possible_cnll,
-                "Offset Cost": cost - minimum_possible_cnll,
-                "Offset Clipped Negative Log Likelihood": cnll - minimum_possible_cnll,
-                "Cost": cost,
-                "Minimum Cost": min_cost,
-                "Parameter Weight Bias": parameter_bias,
-                "Clipped Negative Log Likelihood": cnll,
-                "Minimum Clipped Negative Log Likelihood": min_cnll,
-                "Number of Circuits Run": backend.number_of_circuits_run,
+                **{
+                    "Minimum Offset Cost": min_cost - minimum_possible_cnll,
+                    "Minimum Offset Clipped Negative Log Likelihood": min_cnll
+                    - minimum_possible_cnll,
+                    "Offset Cost": cost - minimum_possible_cnll,
+                    "Offset Clipped Negative Log Likelihood": cnll
+                    - minimum_possible_cnll,
+                    "Cost": cost,
+                    "Minimum Cost": min_cost,
+                    "Parameter Weight Bias": parameter_bias,
+                    "Clipped Negative Log Likelihood": cnll,
+                    "Minimum Clipped Negative Log Likelihood": min_cnll,
+                    "Number of Circuits Run": backend.number_of_circuits_run,
+                },
+                **extra_wandb_logs,
             }
             wandb.log(log_dict)
 

@@ -1,7 +1,7 @@
 from prune import get_padded_parameters, calculate_parameter_weight_bias
 from zquantum.qcbm.ansatz import QCBMAnsatz
 from zquantum.qcbm.cost_function import create_QCBM_cost_function
-from qeqiskit.simulator import QiskitSimulator
+from qecirq.simulator import CirqSimulator
 from zquantum.core.distribution import (
     compute_clipped_negative_log_likelihood,
     create_bitstring_distribution_from_probability_distribution,
@@ -18,13 +18,14 @@ def get_pruned_qcbm_cost_function(
     n_samples=None,
     parameter_period=2 * np.pi,
     weight_decay=0,
+    seed=123,
 ):
     number_of_qubits = int(np.log2(len(target_distribution)))
     target_distribution = create_bitstring_distribution_from_probability_distribution(
         target_distribution
     )
     ansatz = QCBMAnsatz(number_of_layers, number_of_qubits)
-    backend = QiskitSimulator("statevector_simulator")
+    backend = CirqSimulator(seed=seed)
 
     distance_measure = compute_clipped_negative_log_likelihood
     minimum_possible_cnll = compute_clipped_negative_log_likelihood(

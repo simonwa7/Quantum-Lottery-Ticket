@@ -10,14 +10,13 @@ from zquantum.qcbm.ansatz import QCBMAnsatz
 import sys
 import json
 
-VERSION = "0.14"
+VERSION = "0.15"
 PROJECT = "QLT-QCBM-v" + VERSION
 PRUNING_PERCENTAGE = 0.9
 PARAMETER_PERIOD = 2 * np.pi
 WEIGHT_DECAY = 0
 USE_WANDB = True
-MAX_NUMBER_OF_TRIALS = 30
-PARAMETER_DISPLACEMENT = (1/32) * PARAMETER_PERIOD
+MAX_NUMBER_OF_TRIALS = 10
 DISTRIBUTION_TYPE = "normal"
 DISTRIBUTION_MEAN = 0.65
 DISTRIBUTION_STDEV = 0.1
@@ -51,19 +50,20 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
     number_of_parameters = QCBMAnsatz(
         number_of_layers, number_of_qubits
     ).number_of_params
-    samples = np.random.normal(
-        loc=DISTRIBUTION_MEAN, scale=DISTRIBUTION_STDEV, size=100000000
-    )
-    target_distribution = np.histogram(samples, 2 ** number_of_qubits, (0, 1))[0]
-    target_distribution = target_distribution / sum(target_distribution)
-    initial_parameters = np.random.uniform(
-        (-1 * PARAMETER_PERIOD) / 2, (PARAMETER_PERIOD) / 2, number_of_parameters
-    )
 
     #### Unpruned Optimization
     if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
         "unpruned", False
     ):
+        samples = np.random.normal(
+            loc=DISTRIBUTION_MEAN, scale=DISTRIBUTION_STDEV, size=100000000
+        )
+        target_distribution = np.histogram(samples, 2 ** number_of_qubits, (0, 1))[0]
+        target_distribution = target_distribution / sum(target_distribution)
+        initial_parameters = np.random.uniform(
+            (-1 * PARAMETER_PERIOD) / 2, (PARAMETER_PERIOD) / 2, number_of_parameters
+        )
+
         unpruned_cost_function = get_pruned_qcbm_cost_function(
             target_distribution,
             number_of_layers,
@@ -103,6 +103,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
         )
         DATA[str(number_of_qubits)][str(number_of_layers)][trial]["unpruned"] = {
             "initial_parameters": initial_parameters.tolist(),
+            "target_distribution": target_distribution.tolist(),
             "seed": SEED,
             "energy": unpruned_results.opt_value,
             "optimal_parameters": unpruned_results.opt_params.tolist(),
@@ -111,6 +112,17 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             f.write(json.dumps(DATA))
         f.close()
 
+
+    initial_parameters = np.asarray(
+        DATA[str(number_of_qubits)][str(number_of_layers)][trial]["unpruned"][
+            "initial_parameters"
+        ]
+    )
+    target_distribution = np.asarray(
+        DATA[str(number_of_qubits)][str(number_of_layers)][trial]["unpruned"][
+            "target_distribution"
+        ]
+    )
     unpruned_optimal_parameters = np.asarray(
         DATA[str(number_of_qubits)][str(number_of_layers)][trial]["unpruned"][
             "optimal_parameters"
@@ -178,71 +190,79 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             f.write(json.dumps(DATA))
         f.close()
 
-    if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
-        "pruned_with_displacement:{}|{}".format(
-            PRUNING_PERCENTAGE, PARAMETER_DISPLACEMENT
-        ),
-        False,
-    ):
-        pruned_cost_function = get_pruned_qcbm_cost_function(
-            target_distribution,
-            number_of_layers,
-            pruned_parameter_indices,
-            use_wandb=USE_WANDB,
-            weight_decay=WEIGHT_DECAY,
-            parameter_period=PARAMETER_PERIOD,
-        )
-
-        pruned_and_displaced_initial_parameters = (
-            pruned_initial_parameters
-            + np.random.uniform(
-                0, PARAMETER_DISPLACEMENT, len(pruned_initial_parameters)
-            )
-        )
-
-        extra_config = {
-            "intialization_strategy": "uniform (-{}->{})".format(
-                PARAMETER_PERIOD / 2, PARAMETER_PERIOD / 2
-            ),
-            "pruning_percentage": PRUNING_PERCENTAGE,
-            "parameter_displacement": PARAMETER_DISPLACEMENT,
-            "weight_decay": WEIGHT_DECAY,
-            "parameter_period": PARAMETER_PERIOD,
-            "number_of_qubits": number_of_qubits,
-            "number_of_layers": number_of_layers,
-            "trial": trial,
-            "target_distribution": target_distribution,
-            "unpruned_initial_parameters": initial_parameters,
-            "initial_parameters": pruned_and_displaced_initial_parameters,
-            "pruned_parameter_indices": pruned_parameter_indices,
-            "number_of_pruned_parameters": len(pruned_parameter_indices),
-            "type": "pruned_with_displacement:{}".format(PARAMETER_DISPLACEMENT),
-            "target_distribution_type": DISTRIBUTION_TYPE,
-            "target_distribution_mean": DISTRIBUTION_MEAN,
-            "target_distribution_stddev": DISTRIBUTION_STDEV,
-        }
-        pruned_results = optimize_cost_function_with_lbfgsb(
-            pruned_and_displaced_initial_parameters,
-            pruned_cost_function,
-            extra_config=extra_config,
-            use_wandb=USE_WANDB,
-            project=PROJECT,
-            optimizer_options=lbfgsb_options,
-        )
-        DATA[str(number_of_qubits)][str(number_of_layers)][trial][
+    for PARAMETER_DISPLACEMENT in [
+        (1 / 1024) * PARAMETER_PERIOD,
+        (1 / 512) * PARAMETER_PERIOD,
+        (1 / 256) * PARAMETER_PERIOD,
+        (1 / 128) * PARAMETER_PERIOD,
+        (1 / 64) * PARAMETER_PERIOD,
+        (1 / 32) * PARAMETER_PERIOD,
+    ]:
+        if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
             "pruned_with_displacement:{}|{}".format(
                 PRUNING_PERCENTAGE, PARAMETER_DISPLACEMENT
+            ),
+            False,
+        ):
+            pruned_cost_function = get_pruned_qcbm_cost_function(
+                target_distribution,
+                number_of_layers,
+                pruned_parameter_indices,
+                use_wandb=USE_WANDB,
+                weight_decay=WEIGHT_DECAY,
+                parameter_period=PARAMETER_PERIOD,
             )
-        ] = {
-            "initial_parameters": pruned_and_displaced_initial_parameters.tolist(),
-            "seed": SEED,
-            "energy": pruned_results.opt_value,
-            "pruned_indices": pruned_parameter_indices,
-            "optimal_parameters": pruned_results.opt_params.tolist(),
-        }
-        with open(datafilename, "w") as f:
-            f.write(json.dumps(DATA))
-        f.close()
+
+            pruned_and_displaced_initial_parameters = (
+                pruned_initial_parameters
+                + np.random.uniform(
+                    0, PARAMETER_DISPLACEMENT, len(pruned_initial_parameters)
+                )
+            )
+
+            extra_config = {
+                "intialization_strategy": "uniform (-{}->{})".format(
+                    PARAMETER_PERIOD / 2, PARAMETER_PERIOD / 2
+                ),
+                "pruning_percentage": PRUNING_PERCENTAGE,
+                "parameter_displacement": PARAMETER_DISPLACEMENT,
+                "weight_decay": WEIGHT_DECAY,
+                "parameter_period": PARAMETER_PERIOD,
+                "number_of_qubits": number_of_qubits,
+                "number_of_layers": number_of_layers,
+                "trial": trial,
+                "target_distribution": target_distribution,
+                "unpruned_initial_parameters": initial_parameters,
+                "initial_parameters": pruned_and_displaced_initial_parameters,
+                "pruned_parameter_indices": pruned_parameter_indices,
+                "number_of_pruned_parameters": len(pruned_parameter_indices),
+                "type": "pruned_with_displacement:{}".format(PARAMETER_DISPLACEMENT),
+                "target_distribution_type": DISTRIBUTION_TYPE,
+                "target_distribution_mean": DISTRIBUTION_MEAN,
+                "target_distribution_stddev": DISTRIBUTION_STDEV,
+            }
+            pruned_results = optimize_cost_function_with_lbfgsb(
+                pruned_and_displaced_initial_parameters,
+                pruned_cost_function,
+                extra_config=extra_config,
+                use_wandb=USE_WANDB,
+                project=PROJECT,
+                optimizer_options=lbfgsb_options,
+            )
+            DATA[str(number_of_qubits)][str(number_of_layers)][trial][
+                "pruned_with_displacement:{}|{}".format(
+                    PRUNING_PERCENTAGE, PARAMETER_DISPLACEMENT
+                )
+            ] = {
+                "initial_parameters": pruned_and_displaced_initial_parameters.tolist(),
+                "seed": SEED,
+                "energy": pruned_results.opt_value,
+                "pruned_indices": pruned_parameter_indices,
+                "optimal_parameters": pruned_results.opt_params.tolist(),
+            }
+            with open(datafilename, "w") as f:
+                f.write(json.dumps(DATA))
+            f.close()
 
     if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
         "pruned_and_randomized:{}".format(PRUNING_PERCENTAGE), False

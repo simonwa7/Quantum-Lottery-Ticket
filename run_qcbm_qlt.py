@@ -112,7 +112,6 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             f.write(json.dumps(DATA))
         f.close()
 
-
     initial_parameters = np.asarray(
         DATA[str(number_of_qubits)][str(number_of_layers)][trial]["unpruned"][
             "initial_parameters"
@@ -191,12 +190,14 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
         f.close()
 
     for PARAMETER_DISPLACEMENT in [
-        (1 / 1024) * PARAMETER_PERIOD,
-        (1 / 512) * PARAMETER_PERIOD,
-        (1 / 256) * PARAMETER_PERIOD,
+        # (1 / 1024) * PARAMETER_PERIOD,
+        # (1 / 512) * PARAMETER_PERIOD,
+        # (1 / 256) * PARAMETER_PERIOD,
         (1 / 128) * PARAMETER_PERIOD,
-        (1 / 64) * PARAMETER_PERIOD,
+        # (1 / 64) * PARAMETER_PERIOD,
         (1 / 32) * PARAMETER_PERIOD,
+        (1 / 8) * PARAMETER_PERIOD,
+        (1 / 2) * PARAMETER_PERIOD,
     ]:
         if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
             "pruned_with_displacement:{}|{}".format(

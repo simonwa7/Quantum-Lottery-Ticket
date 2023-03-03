@@ -20,9 +20,9 @@ import sys
 import json
 import copy
 
-VERSION = "0.7"
+VERSION = "0.12"
 PROJECT = "QLT-VQE-J1J2-v" + VERSION
-PRUNING_PERCENTAGE = 0.5
+PRUNING_PERCENTAGE = 0.9
 PARAMETER_PERIOD = 2 * np.pi
 WEIGHT_DECAY = 0
 USE_WANDB = True
@@ -114,7 +114,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             "intialization_strategy": "uniform (-{}->{})".format(
                 PARAMETER_PERIOD / 2, PARAMETER_PERIOD / 2
             ),
-            "pruning_percentage": PRUNING_PERCENTAGE,
+            "pruning_percentage": 0,
             "boundary_conditions": BOUNDARY_CONDITIONS,
             "weight decay": WEIGHT_DECAY,
             "parameter_period": PARAMETER_PERIOD,
@@ -123,9 +123,10 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             "number_of_layers": number_of_layers,
             "trial": trial,
             "unpruned_initial_parameters": initial_parameters,
+            "initial_parameters": initial_parameters,
             "pruned_parameter_indices": [],
             "number_of_pruned_parameters": 0,
-            "pruning": "unpruned",
+            "type": "unpruned",
         }
         if optimizer == "L-BFGS-B":
             unpruned_results = optimize_cost_function_with_lbfgsb(
@@ -155,6 +156,11 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             f.write(json.dumps(DATA))
         f.close()
 
+    initial_parameters = np.asarray(
+        DATA[str(number_of_qubits)][str(number_of_layers)][trial]["unpruned"][
+            "initial_parameters"
+        ]
+    )
     unpruned_optimal_parameters = np.asarray(
         DATA[str(number_of_qubits)][str(number_of_layers)][trial]["unpruned"][
             "optimal_parameters"
@@ -170,7 +176,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
     )
 
     if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
-        "pruned", False
+        "pruned:{}".format(PRUNING_PERCENTAGE), False
     ):
 
         pruned_cost_function = get_vqe_cost_function(
@@ -197,9 +203,10 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             "number_of_layers": number_of_layers,
             "trial": trial,
             "unpruned_initial_parameters": initial_parameters,
+            "initial_parameters": pruned_initial_parameters,
             "pruned_parameter_indices": pruned_parameter_indices,
             "number_of_pruned_parameters": len(pruned_parameter_indices),
-            "pruning": "pruned",
+            "type": "pruned",
         }
         if optimizer == "L-BFGS-B":
             pruned_results = optimize_cost_function_with_lbfgsb(
@@ -220,7 +227,9 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
                 optimizer_options=copy.deepcopy(cma_es_options),
             )
 
-        DATA[str(number_of_qubits)][str(number_of_layers)][trial]["pruned"] = {
+        DATA[str(number_of_qubits)][str(number_of_layers)][trial][
+            "pruned:{}".format(PRUNING_PERCENTAGE)
+        ] = {
             "initial_parameters": pruned_initial_parameters.tolist(),
             "seed": SEED,
             "energy": pruned_results.opt_value,
@@ -231,8 +240,84 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             f.write(json.dumps(DATA))
         f.close()
 
+    for PARAMETER_DISPLACEMENT in [
+        # (1 / 1024) * PARAMETER_PERIOD,
+        # (1 / 512) * PARAMETER_PERIOD,
+        # (1 / 256) * PARAMETER_PERIOD,
+        (1 / 128) * PARAMETER_PERIOD,
+        # (1 / 64) * PARAMETER_PERIOD,
+        (1 / 32) * PARAMETER_PERIOD,
+        (1 / 8) * PARAMETER_PERIOD,
+        (1 / 2) * PARAMETER_PERIOD,
+    ]:
+        if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
+            "pruned_with_displacement:{}|{}".format(
+                PRUNING_PERCENTAGE, PARAMETER_DISPLACEMENT
+            ),
+            False,
+        ):
+
+            pruned_cost_function = get_vqe_cost_function(
+                hamiltonian,
+                parameterized_quantum_circuit,
+                pruned_indices=pruned_parameter_indices,
+                weight_decay=WEIGHT_DECAY,
+                offset=-1 * ground_state_energy,
+                parameter_period=PARAMETER_PERIOD,
+                seed=SEED,
+                use_wandb=USE_WANDB,
+            )
+
+            pruned_and_displaced_initial_parameters = (
+                pruned_initial_parameters
+                + np.random.uniform(
+                    0, PARAMETER_DISPLACEMENT, len(pruned_initial_parameters)
+                )
+            )
+
+            extra_config = {
+                "intialization_strategy": "uniform (-{}->{})".format(
+                    PARAMETER_PERIOD / 2, PARAMETER_PERIOD / 2
+                ),
+                "pruning_percentage": PRUNING_PERCENTAGE,
+                "boundary_conditions": BOUNDARY_CONDITIONS,
+                "weight decay": WEIGHT_DECAY,
+                "parameter_period": PARAMETER_PERIOD,
+                "J2": J2,
+                "number_of_qubits": number_of_qubits,
+                "number_of_layers": number_of_layers,
+                "trial": trial,
+                "unpruned_initial_parameters": initial_parameters,
+                "initial_parameters": pruned_and_displaced_initial_parameters,
+                "pruned_parameter_indices": pruned_parameter_indices,
+                "number_of_pruned_parameters": len(pruned_parameter_indices),
+                "type": "pruned_with_displacement:{}".format(PARAMETER_DISPLACEMENT),
+            }
+            pruned_results = optimize_cost_function_with_lbfgsb(
+                pruned_and_displaced_initial_parameters,
+                pruned_cost_function,
+                extra_config=extra_config,
+                use_wandb=USE_WANDB,
+                project=PROJECT,
+                optimizer_options=lbfgsb_options,
+            )
+            DATA[str(number_of_qubits)][str(number_of_layers)][trial][
+                "pruned_with_displacement:{}|{}".format(
+                    PRUNING_PERCENTAGE, PARAMETER_DISPLACEMENT
+                )
+            ] = {
+                "initial_parameters": pruned_and_displaced_initial_parameters.tolist(),
+                "seed": SEED,
+                "energy": pruned_results.opt_value,
+                "pruned_indices": pruned_parameter_indices,
+                "optimal_parameters": pruned_results.opt_params.tolist(),
+            }
+            with open(datafilename, "w") as f:
+                f.write(json.dumps(DATA))
+            f.close()
+
     if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
-        "pruned_and_randomized", False
+        "pruned_and_randomized:{}".format(PRUNING_PERCENTAGE), False
     ):
         pruned_cost_function = get_vqe_cost_function(
             hamiltonian,
@@ -261,9 +346,89 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             "number_of_layers": number_of_layers,
             "trial": trial,
             "unpruned_initial_parameters": initial_parameters,
+            "initial_parameters": random_initial_parameters,
             "pruned_parameter_indices": pruned_parameter_indices,
             "number_of_pruned_parameters": len(pruned_parameter_indices),
-            "pruning": "pruned_and_randomized",
+            "type": "pruned_and_randomized",
+        }
+        if optimizer == "L-BFGS-B":
+            pruned_and_randomized_results = optimize_cost_function_with_lbfgsb(
+                random_initial_parameters,
+                pruned_cost_function,
+                extra_config=extra_config,
+                project=PROJECT,
+                use_wandb=USE_WANDB,
+                optimizer_options=lbfgsb_options,
+            )
+        elif optimizer == "CMA-ES":
+            pruned_and_randomized_results = optimize_cost_function_with_cmaes(
+                random_initial_parameters,
+                pruned_cost_function,
+                extra_config=extra_config,
+                project=PROJECT,
+                use_wandb=USE_WANDB,
+                optimizer_options=copy.deepcopy(cma_es_options),
+            )
+
+        DATA[str(number_of_qubits)][str(number_of_layers)][trial][
+            "pruned_and_randomized:{}".format(PRUNING_PERCENTAGE)
+        ] = {
+            "initial_parameters": random_initial_parameters.tolist(),
+            "seed": SEED,
+            "energy": pruned_and_randomized_results.opt_value,
+            "pruned_indices": pruned_parameter_indices,
+            "optimal_parameters": pruned_and_randomized_results.opt_params.tolist(),
+        }
+        with open(datafilename, "w") as f:
+            f.write(json.dumps(DATA))
+        f.close()
+
+    if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
+        "random_subnetwork:{}".format(PRUNING_PERCENTAGE), False
+    ):
+        randomly_pruned_indices = [
+            int(index)
+            for index in sorted(
+                np.random.choice(
+                    range(number_of_parameters),
+                    len(pruned_parameter_indices),
+                    replace=False,
+                )
+            )
+        ]
+
+        randomly_pruned_initial_parameters = get_pruned_parameters(
+            initial_parameters, randomly_pruned_indices
+        )
+
+        pruned_cost_function = get_vqe_cost_function(
+            hamiltonian,
+            parameterized_quantum_circuit,
+            pruned_indices=randomly_pruned_indices,
+            weight_decay=WEIGHT_DECAY,
+            offset=-1 * ground_state_energy,
+            parameter_period=PARAMETER_PERIOD,
+            seed=SEED,
+            use_wandb=USE_WANDB,
+        )
+
+        extra_config = {
+            "intialization_strategy": "uniform (-{}->{})".format(
+                PARAMETER_PERIOD / 2, PARAMETER_PERIOD / 2
+            ),
+            "pruning_percentage": PRUNING_PERCENTAGE,
+            "boundary_conditions": BOUNDARY_CONDITIONS,
+            "weight decay": WEIGHT_DECAY,
+            "parameter_period": PARAMETER_PERIOD,
+            "J2": J2,
+            "number_of_qubits": number_of_qubits,
+            "number_of_layers": number_of_layers,
+            "trial": trial,
+            "unpruned_initial_parameters": initial_parameters,
+            "initial_parameters": randomly_pruned_initial_parameters,
+            "pruned_parameter_indices": pruned_parameter_indices,
+            "number_of_pruned_parameters": len(pruned_parameter_indices),
+            "type": "random_subnetwork",
         }
         if optimizer == "L-BFGS-B":
             pruned_and_randomized_results = optimize_cost_function_with_lbfgsb(
@@ -292,6 +457,71 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             "energy": pruned_and_randomized_results.opt_value,
             "pruned_indices": pruned_parameter_indices,
             "optimal_parameters": pruned_and_randomized_results.opt_params.tolist(),
+        }
+        with open(datafilename, "w") as f:
+            f.write(json.dumps(DATA))
+        f.close()
+
+    randomly_pruned_indices = DATA[str(number_of_qubits)][str(number_of_layers)][trial][
+        "random_subnetwork:{}".format(PRUNING_PERCENTAGE)
+    ]["pruned_indices"]
+
+    if not DATA[str(number_of_qubits)][str(number_of_layers)][trial].get(
+        "random_subnetwork_randomized_parameters:{}".format(PRUNING_PERCENTAGE), False
+    ):
+        random_initial_parameters = np.random.uniform(
+            (-PARAMETER_PERIOD) / 2,
+            (PARAMETER_PERIOD) / 2,
+            number_of_parameters - len(randomly_pruned_indices),
+        )
+
+        pruned_cost_function = get_vqe_cost_function(
+            hamiltonian,
+            parameterized_quantum_circuit,
+            pruned_indices=randomly_pruned_indices,
+            weight_decay=WEIGHT_DECAY,
+            offset=-1 * ground_state_energy,
+            parameter_period=PARAMETER_PERIOD,
+            seed=SEED,
+            use_wandb=USE_WANDB,
+        )
+
+        extra_config = {
+            "intialization_strategy": "uniform (-{}->{})".format(
+                PARAMETER_PERIOD / 2, PARAMETER_PERIOD / 2
+            ),
+            "pruning_percentage": PRUNING_PERCENTAGE,
+            "boundary_conditions": BOUNDARY_CONDITIONS,
+            "weight decay": WEIGHT_DECAY,
+            "parameter_period": PARAMETER_PERIOD,
+            "J2": J2,
+            "number_of_qubits": number_of_qubits,
+            "number_of_layers": number_of_layers,
+            "trial": trial,
+            "unpruned_initial_parameters": initial_parameters,
+            "initial_parameters": random_initial_parameters,
+            "pruned_parameter_indices": pruned_parameter_indices,
+            "number_of_pruned_parameters": len(pruned_parameter_indices),
+            "type": "random_subnetwork",
+        }
+        random_subnetwork_randomized_parameters_results = (
+            optimize_cost_function_with_lbfgsb(
+                random_initial_parameters,
+                pruned_cost_function,
+                extra_config=extra_config,
+                use_wandb=USE_WANDB,
+                project=PROJECT,
+                optimizer_options=lbfgsb_options,
+            )
+        )
+        DATA[str(number_of_qubits)][str(number_of_layers)][trial][
+            "random_subnetwork_randomized_parameters:{}".format(PRUNING_PERCENTAGE)
+        ] = {
+            "initial_parameters": random_initial_parameters.tolist(),
+            "seed": SEED,
+            "energy": random_subnetwork_randomized_parameters_results.opt_value,
+            "pruned_indices": randomly_pruned_indices,
+            "optimal_parameters": random_subnetwork_randomized_parameters_results.opt_params.tolist(),
         }
         with open(datafilename, "w") as f:
             f.write(json.dumps(DATA))

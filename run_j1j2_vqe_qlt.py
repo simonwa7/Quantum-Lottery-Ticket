@@ -432,7 +432,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
         }
         if optimizer == "L-BFGS-B":
             pruned_and_randomized_results = optimize_cost_function_with_lbfgsb(
-                random_initial_parameters,
+                randomly_pruned_initial_parameters,
                 pruned_cost_function,
                 extra_config=extra_config,
                 project=PROJECT,
@@ -441,7 +441,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             )
         elif optimizer == "CMA-ES":
             pruned_and_randomized_results = optimize_cost_function_with_cmaes(
-                random_initial_parameters,
+                randomly_pruned_initial_parameters,
                 pruned_cost_function,
                 extra_config=extra_config,
                 project=PROJECT,
@@ -452,7 +452,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
         DATA[str(number_of_qubits)][str(number_of_layers)][trial][
             "random_subnetwork:{}".format(PRUNING_PERCENTAGE)
         ] = {
-            "initial_parameters": random_initial_parameters.tolist(),
+            "initial_parameters": randomly_pruned_initial_parameters.tolist(),
             "seed": SEED,
             "energy": pruned_and_randomized_results.opt_value,
             "pruned_indices": pruned_parameter_indices,

@@ -450,7 +450,7 @@ for trial in range(MAX_NUMBER_OF_TRIALS):
             )
 
         DATA[str(number_of_qubits)][str(number_of_layers)][trial][
-            "pruned_and_randomized"
+            "random_subnetwork:{}".format(PRUNING_PERCENTAGE)
         ] = {
             "initial_parameters": random_initial_parameters.tolist(),
             "seed": SEED,
